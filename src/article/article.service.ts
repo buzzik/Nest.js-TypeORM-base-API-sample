@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from 'src/user/user.entity';
-import { DeleteResult, getRepository, Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { ArticleEntity } from './article.entity';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { ArticleResponseInterface } from './types/article-response.interface';
@@ -37,19 +37,23 @@ export class ArticleService {
       });
     }
     if (query.favorited) {
-      const user = await this.userRepository.findOne(
-        {
-          username: query.favorited,
-        },
-        { relations: ['favorites'] },
-      );
+      // const user = await this.userRepository.findOneBy(
+      //   {
+      //     username: query.favorited,
+      //   },
+      //   { relations: ['favorites'] },
+      // );
+      const [user] = await this.userRepository.find({
+        where: { username: query.favorited },
+        relations: { favorites: true },
+      });
       const ids = user.favorites.map((el) => el.id);
       // queryBuilder.andWhere('articles.id IN (:...ids)', { ids });
       queryBuilder.andWhereInIds(ids);
       console.log(user);
     }
     if (query.author) {
-      const author: UserEntity = await this.userRepository.findOne({
+      const author: UserEntity = await this.userRepository.findOneBy({
         username: query.author,
       });
       queryBuilder.andWhere('articles.authorId = :id', { id: author.id });
@@ -65,8 +69,9 @@ export class ArticleService {
 
     let favoriteIds: number[] = [];
     if (currentUserId) {
-      const currentUser = await this.userRepository.findOne(currentUserId, {
-        relations: ['favorites'],
+      const [currentUser] = await this.userRepository.find({
+        where: { id: currentUserId },
+        relations: { favorites: true },
       });
       favoriteIds = currentUser.favorites.map((article) => article.id);
     }
@@ -94,7 +99,7 @@ export class ArticleService {
     query: any,
   ): Promise<ArticlesResponseInterface> {
     const following = await this.followRepository.find({
-      followerId: currentUserId,
+      where: { followerId: currentUserId },
     });
     if (!following.length) {
       return { articles: [], articlesCount: 0 };

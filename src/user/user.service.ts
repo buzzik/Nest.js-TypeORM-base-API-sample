@@ -4,25 +4,29 @@ import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './user.entity';
 import { sign } from 'jsonwebtoken';
-import { JWT_SECRET } from 'src/config';
+// import { JWT_SECRET } from 'src/config';
+import configuration from '../config/configuration';
 import { UserResponseInterface } from './types/user-response.interface';
 import { HttpException } from '@nestjs/common';
 import { HttpStatus } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { LoginUserDto } from './dto/login-user.dto';
 import { compare } from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UserService {
   constructor(
+    private configService: ConfigService,
+
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
-    const userByEmail = await this.userRepository.findOne({
+    const userByEmail = await this.userRepository.findOneBy({
       email: createUserDto.email,
     });
-    const userByUserName = await this.userRepository.findOne({
+    const userByUserName = await this.userRepository.findOneBy({
       username: createUserDto.username,
     });
     if (userByEmail || userByUserName) {
@@ -37,9 +41,10 @@ export class UserService {
   }
 
   generateJwt(user: UserEntity): string {
+    const jwtSecret = this.configService.get<string>('app.jwtSecret');
     return sign(
       { id: user.id, username: user.username, email: user.email },
-      JWT_SECRET,
+      jwtSecret,
       { expiresIn: '7d' },
     );
   }
@@ -58,12 +63,15 @@ export class UserService {
   async login(loginUserDto: LoginUserDto) {
     // const users = await this.userRepository.find();
 
-    const user = await this.userRepository.findOne(
-      {
-        email: loginUserDto.email,
-      },
-      { select: ['id', 'username', 'email', 'password', 'bio', 'image'] },
-    );
+    // const user = await this.userRepository.findOne(
+    //   {
+    //     email: loginUserDto.email,
+    //   },
+    //   { select: ['id', 'username', 'email', 'password', 'bio', 'image'] },
+    const user = await this.userRepository.findOne({
+      where: { email: loginUserDto.email },
+      select: ['id', 'username', 'email', 'password', 'bio', 'image'],
+    });
     if (!user) {
       throw new HttpException('No such user', HttpStatus.UNPROCESSABLE_ENTITY);
     }
@@ -77,7 +85,7 @@ export class UserService {
   }
 
   async findById(id: number): Promise<UserEntity> {
-    return this.userRepository.findOne(id);
+    return this.userRepository.findOneBy({ id });
   }
 
   async updateUser(

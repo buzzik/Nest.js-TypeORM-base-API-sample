@@ -19,14 +19,15 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config=src/ormconfig.ts",
+    "typeorm": "npx typeorm-ts-node-commonjs -d src/orm-data-source.ts",
     "db:drop": "npm run typeorm schema:drop",
     "db:generate": "npm run typeorm migration:generate -- -n",
     "db:migrate": "npm run typeorm migration:run",
-    "db:seed": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js --config=src/ormseedconfig.ts migration:run"
+    "db:seed": "npx typeorm-ts-node-commonjs -d src/seed-data-source.ts migration:run"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
+    "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/typeorm": "^8.0.4",
@@ -41,7 +42,7 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "slugify": "^1.6.5",
-    "typeorm": "^0.2.45"
+    "typeorm": "^0.3.6"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

@@ -22,12 +22,12 @@ export class ProfileService {
     username: string,
     currentUserId: number,
   ): Promise<ProfileType> {
-    const user = await this.userRepository.findOne({ username });
+    const user = await this.userRepository.findOneBy({ username });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
 
-    const following = await this.followRepository.findOne({
+    const following = await this.followRepository.findOneBy({
       followerId: currentUserId,
       followingId: user.id,
     });
@@ -42,16 +42,18 @@ export class ProfileService {
     username: string,
     currentUserId: number,
   ): Promise<ProfileType> {
-    const user = await this.userRepository.findOne({ username });
+    const user = await this.userRepository.findOneBy({ username });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     if (currentUserId === user.id) {
       throw new HttpException('Same user ID', HttpStatus.BAD_REQUEST);
     }
-    const follow = await this.followRepository.findOne({
-      followerId: currentUserId,
-      followingId: user.id,
+    const follow = await this.followRepository.find({
+      where: {
+        followerId: currentUserId,
+        followingId: user.id,
+      },
     });
 
     if (!follow) {
@@ -72,7 +74,7 @@ export class ProfileService {
     username: string,
     currentUserId: number,
   ): Promise<ProfileType> {
-    const user = await this.userRepository.findOne({ username });
+    const user = await this.userRepository.findOneBy({ username });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
