@@ -10,11 +10,12 @@ import { ExpressRequestInterface } from 'src/types/express-request.interface';
 import { User } from './decorators/user.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { BackendValidationPipe } from 'src/shared/pipes/backend-validation.pipe';
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
   @Post('users')
-  @UsePipes(new ValidationPipe())
+  @UsePipes(new BackendValidationPipe())
   async createUser(
     @Body('user') createUserDto: CreateUserDto,
   ): Promise<UserResponseInterface> {
@@ -26,7 +27,7 @@ export class UserController {
   }
 
   @Post('users/login')
-  @UsePipes(new ValidationPipe())
+  @UsePipes(new BackendValidationPipe())
   async login(
     @Body('user') loginUserDto: LoginUserDto,
   ): Promise<UserResponseInterface> {
@@ -50,7 +51,7 @@ export class UserController {
 
   @Put('user')
   @UseGuards(AuthGuard)
-  @UsePipes(new ValidationPipe())
+  @UsePipes(new BackendValidationPipe())
   async updateCurrentUser(
     @User('id') currentUserId: number,
     @Body('user') userDto: UpdateUserDto,
